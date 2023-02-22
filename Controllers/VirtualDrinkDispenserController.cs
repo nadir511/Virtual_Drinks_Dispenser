@@ -14,9 +14,9 @@ namespace Virtual_Drinks_Dispenser.Controllers
         private readonly int cokesCapacity = 2;
         private readonly int fantaCpacity = 1;
         private readonly int preparationTimeInSec = 20;
-        private readonly ILogger _logger;
+        private readonly ILogger<VirtualDrinkDispenserController> _logger;
 
-        public VirtualDrinkDispenserController(ILogger logger)
+        public VirtualDrinkDispenserController(ILogger<VirtualDrinkDispenserController> logger)
         {
             _logger = logger;
         }
@@ -25,7 +25,7 @@ namespace Virtual_Drinks_Dispenser.Controllers
         public ActionResult OrderDrink(string customerNumber,DrinkType drinkType)
         {
             var OrderDetail = new OrderModel(customerNumber,drinkType);
-            
+
             lock (_lockObj)
             {
                 if (checkOrderAcceptance(OrderDetail))
@@ -35,6 +35,7 @@ namespace Virtual_Drinks_Dispenser.Controllers
                 }
                 else
                 {
+                    _logger.LogInformation("429 code return");
                     return StatusCode(429,"Sorry! Cannot Accept further orders");
                 }
             }
@@ -48,6 +49,7 @@ namespace Virtual_Drinks_Dispenser.Controllers
         [NonAction]
         public bool checkOrderAcceptance(OrderModel order)
         {
+            _logger.LogInformation("Checking the order acceptance");
             if (order.drinkType == DrinkType.Coke)
             {
                 return OrdersRepository.AllOrders.Where(x=>x.drinkType== DrinkType.Coke && x.OrderState == OrderState.Serving).ToList().Count< cokesCapacity;
@@ -60,8 +62,11 @@ namespace Virtual_Drinks_Dispenser.Controllers
         [NonAction]
         private async void PrepareAndServeDrink(OrderModel order)
         {
+            _logger.LogInformation("Order Created");
             OrdersRepository.Create(order);
+            _logger.LogInformation("Waiting for Order Preparation");
             await Task.Delay(preparationTimeInSec * 1000);
+            _logger.LogInformation("Serving the Order");
             lock (_lockObj)
             {
                 var getOrderInfo = OrdersRepository.AllOrders.Where(x => x.Id == order.Id).FirstOrDefault();
