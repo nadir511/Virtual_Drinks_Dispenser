@@ -14,16 +14,18 @@ namespace Virtual_Drinks_Dispenser.Controllers
         private readonly int cokesCapacity = 2;
         private readonly int fantaCpacity = 1;
         private readonly int preparationTimeInSec = 20;
-        public VirtualDrinkDispenserController()
-        {
+        private readonly ILogger _logger;
 
+        public VirtualDrinkDispenserController(ILogger logger)
+        {
+            _logger = logger;
         }
         [Route("OrderDrink")]
         [HttpPost]
         public ActionResult OrderDrink(string customerNumber,DrinkType drinkType)
         {
             var OrderDetail = new OrderModel(customerNumber,drinkType);
-
+            
             lock (_lockObj)
             {
                 if (checkOrderAcceptance(OrderDetail))
