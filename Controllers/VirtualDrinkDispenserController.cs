@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using System.ComponentModel.DataAnnotations;
 using Virtual_Drinks_Dispenser.Model;
 
 namespace Virtual_Drinks_Dispenser.Controllers
@@ -22,7 +23,7 @@ namespace Virtual_Drinks_Dispenser.Controllers
         }
         [Route("OrderDrink")]
         [HttpPost]
-        public ActionResult OrderDrink(string customerNumber,DrinkType drinkType)
+        public ActionResult OrderDrink([Required]string customerNumber, [Required] DrinkType drinkType)
         {
             var OrderDetail = new OrderModel(customerNumber,drinkType);
 
@@ -44,6 +45,7 @@ namespace Virtual_Drinks_Dispenser.Controllers
         [HttpGet]
         public ActionResult<IEnumerable<OrderModel>> GetAllOrdersList()
         {
+            _logger.LogInformation("Getting list of All Orders");
             return OrdersRepository.AllOrders.ToList();
         }
         [NonAction]
