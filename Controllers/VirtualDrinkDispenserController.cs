@@ -11,8 +11,9 @@ namespace Virtual_Drinks_Dispenser.Controllers
     public class VirtualDrinkDispenserController : ControllerBase
     {
         private readonly object _lockObj = new object();
-        private readonly int maxCokeOnServing = 2;
-        private readonly int maxFantaOnServing = 1;
+        private readonly int loadOnFantaOrder = 2;
+        private readonly int loadOnCokeOrder = 1;
+        private readonly int totalCapacity = 2;
         private readonly ILogger<VirtualDrinkDispenserController> _logger;
         
 
@@ -101,13 +102,31 @@ namespace Virtual_Drinks_Dispenser.Controllers
         public bool checkOrderAcceptance(OrderModel order)
         {
             _logger.LogInformation("Checking the order acceptance");
+            //if (order.drinkType == DrinkType.Coke)
+            //{
+            //    return OrdersRepository.totalLoad < cokeLoad;
+            //}
+            //else
+            //{
+            //    return OrdersRepository.totalLoad < fantaLoad;
+            //}
+            int requiredCapacity = 0;
             if (order.drinkType == DrinkType.Coke)
             {
-                return OrdersRepository.totalLoad < maxCokeOnServing;
+                requiredCapacity = loadOnCokeOrder;
+            }
+            else if (order.drinkType == DrinkType.Fanta)
+            {
+                requiredCapacity = loadOnFantaOrder;
+            }
+            if (totalCapacity > OrdersRepository.totalLoad && (OrdersRepository.totalLoad + requiredCapacity) <= totalCapacity)
+            {
+                OrdersRepository.totalLoad += requiredCapacity;
+                return true;
             }
             else
             {
-                return OrdersRepository.totalLoad < maxFantaOnServing;
+                return false;
             }
         }
         [NonAction]
@@ -115,14 +134,14 @@ namespace Virtual_Drinks_Dispenser.Controllers
         {
             _logger.LogInformation("Order Created for drink: "+ order.drinkType);
             OrdersRepository.Create(order);
-            if (order.drinkType== DrinkType.Coke)
-            {
-                OrdersRepository.totalLoad += 1;
-            }
-            else if (order.drinkType == DrinkType.Fanta)
-            {
-                OrdersRepository.totalLoad += 2;
-            }
+            //if (order.drinkType== DrinkType.Coke)
+            //{
+            //    OrdersRepository.totalLoad += 1;
+            //}
+            //else if (order.drinkType == DrinkType.Fanta)
+            //{
+            //    OrdersRepository.totalLoad += 2;
+            //}
             _logger.LogInformation("Waiting for Order Preparation");
             await Task.Delay(OrdersRepository.preparationTimeInSec * 1000);
             _logger.LogInformation("Serving the Order for customer number: "+ order.customerNumber);
@@ -133,11 +152,11 @@ namespace Virtual_Drinks_Dispenser.Controllers
                 getOrderInfo.OrderState = OrderState.Served;
                 if (order.drinkType == DrinkType.Coke)
                 {
-                    OrdersRepository.totalLoad -= 1;
+                    OrdersRepository.totalLoad -= loadOnCokeOrder;
                 }
                 else if (order.drinkType == DrinkType.Fanta)
                 {
-                    OrdersRepository.totalLoad -= 2;
+                    OrdersRepository.totalLoad -= loadOnFantaOrder;
                 }
             }
         }
