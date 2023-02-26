@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 
 namespace Virtual_Drinks_Dispenser.Model
 {
@@ -17,12 +18,21 @@ namespace Virtual_Drinks_Dispenser.Model
             drinkType = DrinkType;
         }
     }
+    public class DrinkTypeObj
+    {
+        public string? cokeDrink { get; set; }
+        public string? fantaDrink { get; set; }
+
+    }
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+
     public enum DrinkType
     {
         Coke,
-        
         Fanta
     }
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+
     public enum OrderState
     {
         Serving,
